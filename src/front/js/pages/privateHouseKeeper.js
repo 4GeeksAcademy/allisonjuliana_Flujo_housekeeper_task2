@@ -6,6 +6,8 @@ const PrivateHouseKeeper = () => {
   const [rooms, setRooms] = useState([]); // Estado para almacenar los nombres de las habitaciones
   const [selectedRoomId, setSelectedRoomId] = useState(null); // Estado para almacenar el id de la habitación seleccionada
   const [isRoomSelected, setIsRoomSelected] = useState(false); // Estado para controlar si se seleccionó una habitación
+  const [incidents, setIncidents] = useState([]); // Estado para manejar los incidentes por habitación
+  const [newIncident, setNewIncident] = useState(''); // Estado para manejar el texto del nuevo incidente
   const navigate = useNavigate();
   
   const backendUrl = process.env.REACT_APP_BACKEND_URL || process.env.BACKEND_URL;
@@ -28,7 +30,7 @@ const PrivateHouseKeeper = () => {
   // Función para obtener los nombres de las habitaciones
   const handleFetchRooms = async () => {
     try {
-      const response = await fetch(`${backendUrl}api/rooms`);  // Esta es la nueva llamada API que devuelve las habitaciones
+      const response = await fetch(`${backendUrl}api/rooms`);
       if (!response.ok) {
         throw new Error('Error al obtener los nombres de las habitaciones');
       }
@@ -37,6 +39,20 @@ const PrivateHouseKeeper = () => {
     } catch (error) {
       console.error('Error al obtener las habitaciones:', error);
       alert('Error al obtener los nombres de las habitaciones, por favor intente más tarde.');
+    }
+  };
+
+  // Función para obtener los incidentes por habitación
+  const handleFetchIncidents = async (roomId) => {
+    try {
+      const response = await fetch(`${backendUrl}api/incidents/${roomId}`);
+      if (!response.ok) {
+        throw new Error('Error al obtener los incidentes');
+      }
+      const data = await response.json();
+      setIncidents(data); // Guardamos los incidentes en el estado
+    } catch (error) {
+      console.error('Error al obtener los incidentes:', error);
     }
   };
 
@@ -50,6 +66,7 @@ const PrivateHouseKeeper = () => {
   const handleRoomClick = (roomId) => {
     setSelectedRoomId(roomId); // Establecer el id de la habitación seleccionada
     setIsRoomSelected(true); // Establecer que una habitación ha sido seleccionada
+    handleFetchIncidents(roomId); // Obtener los incidentes relacionados con la habitación seleccionada
   };
 
   // Función para manejar el logout
@@ -62,13 +79,40 @@ const PrivateHouseKeeper = () => {
   const handleBackToRooms = () => {
     setIsRoomSelected(false); // Restablecemos el estado para mostrar los botones de habitaciones
     setSelectedRoomId(null); // Limpiamos el id de la habitación seleccionada
+    setIncidents([]); // Limpiamos los incidentes
+    setNewIncident(''); // Limpiamos el campo de incidente
   };
 
-  // Función para obtener el nombre de la habitación basado en el id_room
-  // const getRoomNameById = (id) => {
-  //   const room = rooms.find((room) => room.id === id);
-  //   return room ? room.name : 'Habitación no encontrada';
-  // };
+  // Función para manejar el nuevo incidente
+  const handleNewIncidentChange = (e) => {
+    setNewIncident(e.target.value);
+  };
+
+  // Función para enviar el nuevo incidente
+  const handleSubmitIncident = async () => {
+    if (!newIncident) return; // Si no hay texto, no hacemos nada
+    try {
+      const response = await fetch(`${backendUrl}api/incidents/${selectedRoomId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description: newIncident }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al registrar el incidente');
+      }
+
+      // Agregar el nuevo incidente al estado
+      const incident = await response.json();
+      setIncidents((prevIncidents) => [...prevIncidents, incident]);
+      setNewIncident(''); // Limpiar el campo de texto después de enviar
+    } catch (error) {
+      console.error('Error al registrar el incidente:', error);
+      alert('Error al registrar el incidente, por favor intente más tarde.');
+    }
+  };
 
   return (
     <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
@@ -83,7 +127,7 @@ const PrivateHouseKeeper = () => {
                 className="btn btn-primary mt-3 px-3 py-2"
                 onClick={() => handleRoomClick(task.id_room)} // Seleccionamos el id de la habitación
               >
-                <h5>Habitación: {task.id_room}</h5> {/* Mostrar el nombre de la habitación */}
+                <h5>Habitación: {task.room_nombre}</h5> {/* Mostrar el nombre de la habitación */}
               </button>
             </div>
           ))
@@ -92,15 +136,13 @@ const PrivateHouseKeeper = () => {
         {/* Mostrar la información de la habitación seleccionada */}
         {isRoomSelected && (
           <div className="mt-4">
-            {/* <h4 className="text-center mb-4">Detalles de la Habitación</h4> */}
-
             {tasks
               .filter((task) => task.id_room === selectedRoomId)
               .map((task) => (
                 <div key={task.id} className="card mb-3 shadow-sm">
                   <div className="card-body">
-                    {/* <h5 className="card-title">Tarea asignada: {task.nombre}</h5> */}
-                    <p><strong>Tarea asignada::</strong> {task.nombre}</p>
+                    <p><strong>Habitación:</strong> {task.room_nombre}</p>
+                    <p><strong>Tarea asignada:</strong> {task.nombre}</p>
                     <p><strong>Condición:</strong> {task.condition}</p>
                     <p><strong>Fecha de Asignación:</strong> {task.assignment_date}</p>
                     <p><strong>Fecha de Entrega:</strong> {task.submission_date}</p>
@@ -112,17 +154,52 @@ const PrivateHouseKeeper = () => {
                         <span>Sin foto</span>
                       )}
                     </div>
-                    <div className="mt-3">
-                      <button
-                        className="btn btn-primary w-100"
-                        onClick={handleBackToRooms}
-                      >
-                        Volver a ver todas las habitaciones
-                      </button>
-                    </div>
                   </div>
                 </div>
               ))}
+
+            {/* Formulario para registrar un nuevo incidente */}
+            <div className="mt-4">
+              <h4>Registrar un Incidente</h4>
+              <textarea
+                value={newIncident}
+                onChange={handleNewIncidentChange}
+                placeholder="Describe el incidente..."
+                className="form-control"
+                rows="3"
+              />
+              <button
+                className="btn btn-danger mt-2"
+                onClick={handleSubmitIncident}
+              >
+                Registrar Incidente
+              </button>
+            </div>
+
+            {/* Mostrar los incidentes asociados a la habitación */}
+            <div className="mt-4">
+              <h4>Incidentes Reportados</h4>
+              {incidents.length === 0 ? (
+                <p>No hay incidentes reportados para esta habitación.</p>
+              ) : (
+                incidents.map((incident, index) => (
+                  <div key={index} className="card mb-3">
+                    <div className="card-body">
+                      <p>{incident.description}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="mt-3">
+              <button
+                className="btn btn-primary w-100"
+                onClick={handleBackToRooms}
+              >
+                Volver a ver todas las habitaciones
+              </button>
+            </div>
           </div>
         )}
 

@@ -195,7 +195,7 @@ class HouseKeeperTask(db.Model):
             "assignment_date": self.assignment_date,
             "submission_date": self.submission_date,
             "id_room": self.id_room,
-            # "room_nombre": self.room_nombre,
+            "room_nombre": self.room.nombre if self.room else None,
             "id_housekeeper": self.id_housekeeper
         }
     
