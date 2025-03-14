@@ -6,8 +6,9 @@ const PrivateHouseKeeper = () => {
   const [rooms, setRooms] = useState([]); // Estado para almacenar los nombres de las habitaciones
   const [selectedRoomId, setSelectedRoomId] = useState(null); // Estado para almacenar el id de la habitación seleccionada
   const [isRoomSelected, setIsRoomSelected] = useState(false); // Estado para controlar si se seleccionó una habitación
-  const [incidents, setIncidents] = useState([]); // Estado para manejar los incidentes por habitación
-  const [newIncident, setNewIncident] = useState(''); // Estado para manejar el texto del nuevo incidente
+  const [isIncidentFormVisible, setIsIncidentFormVisible] = useState(false); // Estado para mostrar u ocultar el formulario de incidencia
+  const [incident, setIncident] = useState(''); // Estado para almacenar la descripción de la incidencia
+  const [incidentPhoto, setIncidentPhoto] = useState(null); // Estado para almacenar la foto de la incidencia
   const navigate = useNavigate();
   
   const backendUrl = process.env.REACT_APP_BACKEND_URL || process.env.BACKEND_URL;
@@ -42,20 +43,6 @@ const PrivateHouseKeeper = () => {
     }
   };
 
-  // Función para obtener los incidentes por habitación
-  const handleFetchIncidents = async (roomId) => {
-    try {
-      const response = await fetch(`${backendUrl}api/incidents/${roomId}`);
-      if (!response.ok) {
-        throw new Error('Error al obtener los incidentes');
-      }
-      const data = await response.json();
-      setIncidents(data); // Guardamos los incidentes en el estado
-    } catch (error) {
-      console.error('Error al obtener los incidentes:', error);
-    }
-  };
-
   // Llamada a las funciones cuando el componente se monta
   useEffect(() => {
     handleFetchTasks();
@@ -66,7 +53,6 @@ const PrivateHouseKeeper = () => {
   const handleRoomClick = (roomId) => {
     setSelectedRoomId(roomId); // Establecer el id de la habitación seleccionada
     setIsRoomSelected(true); // Establecer que una habitación ha sido seleccionada
-    handleFetchIncidents(roomId); // Obtener los incidentes relacionados con la habitación seleccionada
   };
 
   // Función para manejar el logout
@@ -79,39 +65,23 @@ const PrivateHouseKeeper = () => {
   const handleBackToRooms = () => {
     setIsRoomSelected(false); // Restablecemos el estado para mostrar los botones de habitaciones
     setSelectedRoomId(null); // Limpiamos el id de la habitación seleccionada
-    setIncidents([]); // Limpiamos los incidentes
-    setNewIncident(''); // Limpiamos el campo de incidente
   };
 
-  // Función para manejar el nuevo incidente
-  const handleNewIncidentChange = (e) => {
-    setNewIncident(e.target.value);
+  // Función para mostrar el formulario de incidencia
+  const handleShowIncidentForm = () => {
+    setIsIncidentFormVisible(true); // Mostrar el formulario
   };
 
-  // Función para enviar el nuevo incidente
-  const handleSubmitIncident = async () => {
-    if (!newIncident) return; // Si no hay texto, no hacemos nada
-    try {
-      const response = await fetch(`${backendUrl}api/incidents/${selectedRoomId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ description: newIncident }),
-      });
+  // Función para ocultar el formulario de incidencia
+  const handleHideIncidentForm = () => {
+    setIsIncidentFormVisible(false); // Ocultar el formulario
+    setIncident(''); // Limpiar el campo de texto
+    setIncidentPhoto(null); // Limpiar la foto seleccionada
+  };
 
-      if (!response.ok) {
-        throw new Error('Error al registrar el incidente');
-      }
-
-      // Agregar el nuevo incidente al estado
-      const incident = await response.json();
-      setIncidents((prevIncidents) => [...prevIncidents, incident]);
-      setNewIncident(''); // Limpiar el campo de texto después de enviar
-    } catch (error) {
-      console.error('Error al registrar el incidente:', error);
-      alert('Error al registrar el incidente, por favor intente más tarde.');
-    }
+  // Función para manejar el cambio en el input de incidencia
+  const handleIncidentChange = (e) => {
+    setIncident(e.target.value);
   };
 
   return (
@@ -157,41 +127,47 @@ const PrivateHouseKeeper = () => {
                   </div>
                 </div>
               ))}
-
-            {/* Formulario para registrar un nuevo incidente */}
-            <div className="mt-4">
-              <h4>Registrar un Incidente</h4>
-              <textarea
-                value={newIncident}
-                onChange={handleNewIncidentChange}
-                placeholder="Describe el incidente..."
-                className="form-control"
-                rows="3"
-              />
+            
+            <div className="mt-3">
               <button
-                className="btn btn-danger mt-2"
-                onClick={handleSubmitIncident}
+                className="btn btn-primary w-100"
+                onClick={handleShowIncidentForm}
               >
-                Registrar Incidente
+                Incidentes
               </button>
-            </div>
 
-            {/* Mostrar los incidentes asociados a la habitación */}
-            <div className="mt-4">
-              <h4>Incidentes Reportados</h4>
-              {incidents.length === 0 ? (
-                <p>No hay incidentes reportados para esta habitación.</p>
-              ) : (
-                incidents.map((incident, index) => (
-                  <div key={index} className="card mb-3">
-                    <div className="card-body">
-                      <p>{incident.description}</p>
-                    </div>
+              {/* Formulario de incidencia (solo se muestra cuando el estado lo permite) */}
+              {isIncidentFormVisible && (
+                <div className="mt-4">
+                  <h4>Registrar Incidente</h4>
+                  <div className="mb-3">
+                    <label htmlFor="incident" className="form-label">Descripción de la Incidencia</label>
+                    <input
+                      className="form-control"
+                    />
                   </div>
-                ))
+                  <div className="mb-3">
+                    <label htmlFor="photo" className="form-label">Foto (opcional)</label>
+                    <input
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleHideIncidentForm}
+                    >
+                      Volver
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                    >
+                      Registrar Incidente
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
-
             <div className="mt-3">
               <button
                 className="btn btn-primary w-100"
@@ -202,8 +178,6 @@ const PrivateHouseKeeper = () => {
             </div>
           </div>
         )}
-
-        {/* Cerrar sesión */}
         <div className="d-flex justify-content-center">
           <button
             className="btn btn-primary mt-3 px-5 py-2"
