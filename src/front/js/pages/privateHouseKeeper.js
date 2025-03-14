@@ -7,7 +7,6 @@ const PrivateHouseKeeper = () => {
   const [selectedRoomId, setSelectedRoomId] = useState(null); // Estado para almacenar el id de la habitación seleccionada
   const [isRoomSelected, setIsRoomSelected] = useState(false); // Estado para controlar si se seleccionó una habitación
   const [isIncidentFormVisible, setIsIncidentFormVisible] = useState(false); // Estado para mostrar u ocultar el formulario de incidencia
-  const [incident, setIncident] = useState(''); // Estado para almacenar la descripción de la incidencia
   const [incidentPhoto, setIncidentPhoto] = useState(null); // Estado para almacenar la foto de la incidencia
   const navigate = useNavigate();
   
@@ -80,9 +79,9 @@ const PrivateHouseKeeper = () => {
   };
 
   // Función para manejar el cambio en el input de incidencia
-  const handleIncidentChange = (e) => {
-    setIncident(e.target.value);
-  };
+  // const handleIncidentChange = (e) => {
+  //   setIncident(e.target.value);
+  // };
 
   return (
     <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">

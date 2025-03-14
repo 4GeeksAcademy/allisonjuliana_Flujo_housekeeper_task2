@@ -5,7 +5,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 from flask import Flask, request, jsonify, url_for, Blueprint
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from api.models import db, User, Hoteles, Theme, Category, HotelTheme, Branches, Maintenance, HouseKeeper, HouseKeeperTask, MaintenanceTask, Room
+from api.models import db, User, Hoteles, Theme, Category, HotelTheme, Branches, Maintenance, HouseKeeper, HouseKeeperTask, MaintenanceTask, Room, IncidentMaintenanceTask
 import datetime
 import jwt
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -806,3 +806,26 @@ def signuphotel():
 def privatehotel():
     current_user = get_jwt_identity() #obtiene la identidad del usuario desde el token
     return jsonify(logget_in_as=current_user), 200
+
+@api.route('/incidentmaintenancetasks', methods=['POST'])
+def create_incident_maintenance_task():
+    # Obtener los datos del cuerpo de la solicitud
+    data = request.get_json()
+
+    # Validar los datos (asegúrate de que todos los campos necesarios estén presentes)
+    if not data.get('nombre') or not data.get('room_id') or not data.get('housekeeper_id'):
+        return jsonify({'message': 'Faltan campos obligatorios'}), 400
+
+    # Crear la nueva tarea de mantenimiento
+    new_task = IncidentMaintenanceTask(
+        nombre=data['nombre'],
+        room_id=data['room_id'],
+        housekeeper_id=data['housekeeper_id']
+    )
+
+    # Agregar la tarea a la sesión de base de datos
+    db.session.add(new_task)
+    db.session.commit()  # Confirmar los cambios en la base de datos
+
+    # Devolver la tarea recién creada como respuesta (puedes usar el método serialize)
+    return jsonify(new_task.serialize()), 201

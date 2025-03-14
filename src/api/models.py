@@ -232,3 +232,26 @@ class MaintenanceTask(db.Model):
             "housekeeper": self.housekeeper.serialize() if self.housekeeper else None,  # Detalles del housekeeper
             "category": self.category.serialize() if self.category else None,  # Detalles de la categoría
         }
+    
+class IncidentMaintenanceTask(db.Model):
+    __tablename__ = 'incidentmaintenancetask'  # Nombre de la tabla actualizado
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(120), unique=True, nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
+    housekeeper_id = db.Column(db.Integer, db.ForeignKey('housekeeper.id'), nullable=False)
+
+    room = db.relationship('Room')
+    housekeeper = db.relationship('HouseKeeper')
+
+    def __repr__(self):
+        return f'<IncidentMaintenanceTask {self.nombre}>'
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "room_id": self.room_id,
+            "housekeeper_id": self.housekeeper_id,
+            # "room": self.room.serialize() if self.room else None,  # Detalles de la habitación
+            # "housekeeper": self.housekeeper.serialize() if self.housekeeper else None,  # Detalles del housekeeper
+        }
