@@ -138,30 +138,13 @@ const PrivateHouseKeeper = () => {
               {/* Formulario de incidencia (solo se muestra cuando el estado lo permite) */}
               {isIncidentFormVisible && (
                 <div className="mt-4">
-                  <h4>Registrar Incidente</h4>
-                  <div className="mb-3">
-                    <label htmlFor="incident" className="form-label">Descripción de la Incidencia</label>
-                    <input
-                      className="form-control"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="photo" className="form-label">Foto (opcional)</label>
-                    <input
-                      className="form-control"
-                    />
-                  </div>
+                  <h4>Registrar tarea de mantenimiento</h4>
                   <div className="d-flex justify-content-between">
                     <button
                       className="btn btn-primary"
                       onClick={handleHideIncidentForm}
                     >
                       Volver
-                    </button>
-                    <button
-                      className="btn btn-primary"
-                    >
-                      Registrar Incidente
                     </button>
                   </div>
                 </div>
