@@ -12,10 +12,8 @@ import { Navbar } from "./component/navbar";
 import { Footer } from "./component/footer";
 
 import LoginHouseKeeper from "./pages/loginHouseKeeper";
-// import PrivateHouseKeeper from './pages/privateHouseKeeper';
-import PrivateHouseKeeper from './pages/privateHouseKeepe';
-// import PrivateHouseKeeper from './pages/privateHouseKeeperr';
-// import ProtectedPrivateHouseKeeper from './pages/ProtectedPrivateHouseKeeper';
+import PrivateHouseKeeper from './pages/privateHouseKeeper';
+import ProtectedPrivateHouseKeeper from './pages/ProtectedPrivateHouseKeeper';
 
 //create your first component
 const Layout = () => {
@@ -35,9 +33,7 @@ const Layout = () => {
                         <Route element={<Demo />} path="/demo" />
                         <Route element={<Single />} path="/single/:theid" />
                         <Route element={<LoginHouseKeeper />} path="/loginHouseKeeper" />
-                        <Route element={<PrivateHouseKeeper />} path="/privateHouseKeepe" />
-                        {/* <Route element={<PrivateHouseKeeper />} path="/privateHouseKeeperr" /> */}
-                        {/* <Route element={<ProtectedPrivateHouseKeeper><PrivateHouseKeeper /></ProtectedPrivateHouseKeeper>} path="/privateHouseKeeper" /> */}
+                        <Route element={<ProtectedPrivateHouseKeeper><PrivateHouseKeeper /></ProtectedPrivateHouseKeeper>} path="/privateHouseKeeper" />
                         <Route element={<h1>Not found!</h1>} />
                     </Routes>
                     <Footer />

@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';  // Importa jwtDecode correctamente
 
 const PrivateHouseKeeper = () => {
   const [tasks, setTasks] = useState([]); // Estado para almacenar las tareas
-  const [rooms, setRooms] = useState([]); // Estado para almacenar los nombres de las habitaciones
   const [selectedRoomId, setSelectedRoomId] = useState(null); // Estado para almacenar el id de la habitación seleccionada
   const [isRoomSelected, setIsRoomSelected] = useState(false); // Estado para controlar si se seleccionó una habitación
-  const [isIncidentFormVisible, setIsIncidentFormVisible] = useState(false); // Estado para mostrar u ocultar el formulario de incidencia
-  const [incidentPhoto, setIncidentPhoto] = useState(null); // Estado para almacenar la foto de la incidencia
+  const [nombre, setNombre] = useState(''); // Estado para el nombre de la tarea de mantenimiento
   const navigate = useNavigate();
   
   const backendUrl = process.env.REACT_APP_BACKEND_URL || process.env.BACKEND_URL;
@@ -27,25 +26,9 @@ const PrivateHouseKeeper = () => {
     }
   };
 
-  // Función para obtener los nombres de las habitaciones
-  const handleFetchRooms = async () => {
-    try {
-      const response = await fetch(`${backendUrl}api/rooms`);
-      if (!response.ok) {
-        throw new Error('Error al obtener los nombres de las habitaciones');
-      }
-      const data = await response.json();
-      setRooms(data); // Guardamos los nombres de las habitaciones en el estado
-    } catch (error) {
-      console.error('Error al obtener las habitaciones:', error);
-      alert('Error al obtener los nombres de las habitaciones, por favor intente más tarde.');
-    }
-  };
-
-  // Llamada a las funciones cuando el componente se monta
+  // Llamada a la función cuando el componente se monta
   useEffect(() => {
     handleFetchTasks();
-    handleFetchRooms(); // Llamamos a esta función para obtener los nombres de las habitaciones
   }, []);
 
   // Función para manejar el clic en la habitación y seleccionar el id
@@ -66,22 +49,65 @@ const PrivateHouseKeeper = () => {
     setSelectedRoomId(null); // Limpiamos el id de la habitación seleccionada
   };
 
-  // Función para mostrar el formulario de incidencia
-  const handleShowIncidentForm = () => {
-    setIsIncidentFormVisible(true); // Mostrar el formulario
+  // Función para crear una nueva tarea de mantenimiento
+  const createMaintenanceTask = async () => {
+    const token = localStorage.getItem('token');
+    let housekeeperId = null;
+
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);  // Decodificar el token
+        housekeeperId = decoded.housekeeper_id; // Obtener el ID del housekeeper
+      } catch (error) {
+        console.error('Error al decodificar el token:', error);
+        alert('Hubo un error al obtener el ID del housekeeper');
+        return;
+      }
+    }
+
+    const taskData = {
+      nombre: nombre || undefined,
+      room_id: selectedRoomId,  // Incluye el ID de la habitación seleccionada
+      housekeeper_id: housekeeperId  // Incluye el ID del housekeeper
+    };
+
+    try {
+      const response = await fetch(`${backendUrl}api/maintenancetasks`, { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(taskData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert('Tarea de mantenimiento creada con éxito');
+        resetForm();  // Restablecer el formulario
+      } else {
+        const errorData = await response.json();
+        console.error('Error al crear la tarea de mantenimiento:', errorData.message);
+        alert('Error al crear la tarea de mantenimiento: ' + errorData.message);
+      }
+    } catch (error) {
+      console.error('Error al crear la tarea de mantenimiento:', error);
+      alert('Hubo un problema al enviar la solicitud. Por favor, inténtalo de nuevo.');
+    }
   };
 
-  // Función para ocultar el formulario de incidencia
-  const handleHideIncidentForm = () => {
-    setIsIncidentFormVisible(false); // Ocultar el formulario
-    setIncident(''); // Limpiar el campo de texto
-    setIncidentPhoto(null); // Limpiar la foto seleccionada
+  // Restablecer el formulario después de la creación
+  const resetForm = () => {
+    setNombre('');
   };
 
-  // Función para manejar el cambio en el input de incidencia
-  // const handleIncidentChange = (e) => {
-  //   setIncident(e.target.value);
-  // };
+  // Agrupar las tareas por id_room para que se muestre un solo botón por habitación
+  const groupedTasks = tasks.reduce((acc, task) => {
+    if (!acc[task.id_room]) {
+      acc[task.id_room] = [];
+    }
+    acc[task.id_room].push(task);
+    return acc;
+  }, {});
 
   return (
     <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
@@ -89,67 +115,73 @@ const PrivateHouseKeeper = () => {
         <h2 className="text-center mb-4 text-primary">Tareas de Housekeeper</h2>
 
         {/* Mostrar los botones de habitaciones si no se ha seleccionado una habitación */}
-        {!isRoomSelected && tasks.length > 0 ? (
-          tasks.map((task) => (
-            <div key={task.id} className="mb-3">
-              <button
-                className="btn btn-primary mt-3 px-3 py-2"
-                onClick={() => handleRoomClick(task.id_room)} // Seleccionamos el id de la habitación
-              >
-                <h5>Habitación: {task.room_nombre}</h5> {/* Mostrar el nombre de la habitación */}
-              </button>
-            </div>
-          ))
+        {!isRoomSelected && Object.keys(groupedTasks).length > 0 ? (
+          Object.keys(groupedTasks).map((roomId) => {
+            const roomTasks = groupedTasks[roomId];
+            return (
+              <div key={roomId} className="mb-3">
+                <button
+                  className="btn btn-primary mt-3 px-3 py-2"
+                  onClick={() => handleRoomClick(roomId)} // Seleccionamos el id de la habitación
+                >
+                  <h5>Habitación: {roomTasks[0].room_nombre}</h5> {/* Mostrar el nombre de la habitación (del primer task) */}
+                </button>
+              </div>
+            );
+          })
         ) : null}
 
         {/* Mostrar la información de la habitación seleccionada */}
         {isRoomSelected && (
           <div className="mt-4">
-            {tasks
-              .filter((task) => task.id_room === selectedRoomId)
-              .map((task) => (
-                <div key={task.id} className="card mb-3 shadow-sm">
-                  <div className="card-body">
-                    <p><strong>Habitación:</strong> {task.room_nombre}</p>
-                    <p><strong>Tarea asignada:</strong> {task.nombre}</p>
-                    <p><strong>Condición:</strong> {task.condition}</p>
-                    <p><strong>Fecha de Asignación:</strong> {task.assignment_date}</p>
-                    <p><strong>Fecha de Entrega:</strong> {task.submission_date}</p>
-                    <div className="mt-3">
-                      <strong>Foto: </strong>
-                      {task.photo ? (
-                        <img src={task.photo} alt="Tarea" style={{ maxWidth: '100px', borderRadius: '5px' }} />
-                      ) : (
-                        <span>Sin foto</span>
-                      )}
-                    </div>
+            {groupedTasks[selectedRoomId] && groupedTasks[selectedRoomId].map((task) => (
+              <div key={task.id} className="card mb-3 shadow-sm">
+                <div className="card-body">
+                  <p><strong>Habitación:</strong> {task.room_nombre}</p>
+                  <p><strong>Tarea asignada:</strong> {task.nombre}</p>
+                  <p><strong>Condición:</strong> {task.condition}</p>
+                  <p><strong>Fecha de Asignación:</strong> {task.assignment_date}</p>
+                  <p><strong>Fecha de Entrega:</strong> {task.submission_date}</p>
+                  <div className="mt-3">
+                    <strong>Foto: </strong>
+                    {task.photo ? (
+                      <img src={task.photo} alt="Tarea" style={{ maxWidth: '100px', borderRadius: '5px' }} />
+                    ) : (
+                      <span>Sin foto</span>
+                    )}
                   </div>
                 </div>
-              ))}
-            
-            <div className="mt-3">
-              <button
-                className="btn btn-primary w-100"
-                onClick={handleShowIncidentForm}
-              >
-                Incidentes
-              </button>
+              </div>
+            ))}
 
-              {/* Formulario de incidencia (solo se muestra cuando el estado lo permite) */}
-              {isIncidentFormVisible && (
-                <div className="mt-4">
-                  <h4>Registrar tarea de mantenimiento</h4>
-                  <div className="d-flex justify-content-between">
-                    <button
-                      className="btn btn-primary"
-                      onClick={handleHideIncidentForm}
-                    >
-                      Volver
-                    </button>
+            {/* Formulario para crear tareas de mantenimiento */}
+            <div className="card shadow-lg">
+              <div className="card-body">
+                <h5 className="card-title text-primary">Tarea de Mantenimiento</h5>
+                <form>
+                  <div className="form-group mb-3">
+                    {/* <label htmlFor="nombre">Nombre</label> */}
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="nombre"
+                      value={nombre}
+                      onChange={(e) => setNombre(e.target.value)}
+                      placeholder="Ingresa la tarea de mantenimiento..."
+                    />
                   </div>
-                </div>
-              )}
+
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-block"
+                    onClick={createMaintenanceTask}  // Llamar la función para crear la tarea de mantenimiento
+                  >
+                    Crear Tarea
+                  </button>
+                </form>
+              </div>
             </div>
+
             <div className="mt-3">
               <button
                 className="btn btn-primary w-100"
@@ -160,6 +192,7 @@ const PrivateHouseKeeper = () => {
             </div>
           </div>
         )}
+
         <div className="d-flex justify-content-center">
           <button
             className="btn btn-primary mt-3 px-5 py-2"
