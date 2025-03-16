@@ -681,14 +681,16 @@ def create_maintenance_task():
     data = request.get_json()
 
     try:
+        # Asignamos un valor predeterminado si el campo es None o no está presente
         nombre = data.get('nombre')
-        photo = data.get('photo')
-        condition = data.get('condition')
-        room_id = data.get('room_id')
-        maintenance_id = data.get('maintenance_id')
-        housekeeper_id = data.get('housekeeper_id')
-        category_id = data.get('category_id')
+        photo = data.get('photo', None)  # Si no se proporciona 'photo', se asigna 'None'
+        condition = data.get('condition', None)  # Si no se proporciona 'condition', se asigna 'None'
+        room_id = data.get('room_id', None)  # Si no se proporciona 'room_id', se asigna 'None'
+        maintenance_id = data.get('maintenance_id', None)  # Si no se proporciona 'maintenance_id', se asigna 'None'
+        housekeeper_id = data.get('housekeeper_id', None)  # Si no se proporciona 'housekeeper_id', se asigna 'None'
+        category_id = data.get('category_id', None)  # Si no se proporciona 'category_id', se asigna 'None'
 
+        # Crear la nueva tarea de mantenimiento
         new_task = MaintenanceTask(
             nombre=nombre,
             photo=photo,
@@ -707,6 +709,8 @@ def create_maintenance_task():
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": "Error al crear la tarea de mantenimiento", "error": str(e)}), 400
+
+
 
 @api.route('/maintenancetasks/<int:id>', methods=['PUT'])
 def update_maintenance_task(id):

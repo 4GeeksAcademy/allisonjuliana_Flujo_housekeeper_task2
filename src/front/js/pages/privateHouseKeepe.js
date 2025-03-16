@@ -45,32 +45,28 @@ const PrivateHouseKeeper = () => {
 
   // Crear una nueva tarea de mantenimiento
   const createMaintenanceTask = async () => {
-    // Verificar que todos los campos estén llenos
-    if (!nombre || !photo || !condition || !idRoom || !idMaintenance || !idHousekeeper || !idCategory) {
-      alert('Por favor, completa todos los campos');
-      return;
-    }
+    // Crear un objeto con los valores a enviar (solo los que están completos o no vacíos)
+    const taskData = {
+      nombre: nombre || undefined, // Si no hay nombre, se asigna undefined
+      photo: photo || undefined, // Si no hay foto, se asigna undefined
+      condition: condition || undefined, // Si no hay condición, se asigna undefined
+      room_id: idRoom || undefined, // Si no se selecciona habitación, se asigna undefined
+      maintenance_id: idMaintenance || undefined, // Si no se selecciona mantenimiento, se asigna undefined
+      housekeeper_id: idHousekeeper || undefined, // Si no se selecciona housekeeper, se asigna undefined
+      category_id: idCategory || undefined, // Si no se selecciona categoría, se asigna undefined
+    };
 
     try {
-      const response = await fetch(`${backendUrl}api/maintenancetasks`, { // Usamos esta URL para crear tareas de mantenimiento
+      const response = await fetch(`${backendUrl}api/maintenancetasks`, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          nombre,
-          photo,
-          condition,
-          room_id: idRoom,
-          maintenance_id: idMaintenance,
-          housekeeper_id: idHousekeeper,
-          category_id: idCategory,
-        }),
+        body: JSON.stringify(taskData),
       });
 
       if (response.ok) {
         const data = await response.json();
-        // Si la respuesta es correcta, puedes agregar el nuevo mantenimiento a tu lista (si es necesario)
         alert('Tarea de mantenimiento creada con éxito');
         resetForm();  // Restablecer el formulario
       } else {
@@ -101,14 +97,14 @@ const PrivateHouseKeeper = () => {
   }, []);
 
   return (
-    <div className="container">
-      <h1>Gestión de Tareas de Mantenimiento</h1>
+    <div className="container my-5">
+      <h1 className="text-center mb-4">Gestión de Tareas de Mantenimiento</h1>
 
-      <div className="card">
+      <div className="card shadow-lg p-4">
         <div className="card-body">
-          <h5 className="card-title">Crear Tarea de Mantenimiento</h5>
+          <h5 className="card-title text-primary">Crear Tarea de Mantenimiento</h5>
           <form>
-            <div className="form-group">
+            <div className="form-group mb-3">
               <label htmlFor="nombre">Nombre</label>
               <input
                 type="text"
@@ -119,7 +115,7 @@ const PrivateHouseKeeper = () => {
               />
             </div>
 
-            <div className="form-group">
+            {/* <div className="form-group mb-3">
               <label htmlFor="photo">Foto</label>
               <input
                 type="text"
@@ -128,9 +124,9 @@ const PrivateHouseKeeper = () => {
                 value={photo}
                 onChange={(e) => setPhoto(e.target.value)}
               />
-            </div>
+            </div> */}
 
-            <div className="form-group">
+            {/* <div className="form-group mb-3">
               <label htmlFor="condition">Condición</label>
               <input
                 type="text"
@@ -139,9 +135,9 @@ const PrivateHouseKeeper = () => {
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
               />
-            </div>
+            </div> */}
 
-            <div className="form-group">
+            {/* <div className="form-group mb-3">
               <label htmlFor="idRoom">Habitación</label>
               <select
                 className="form-control"
@@ -156,9 +152,9 @@ const PrivateHouseKeeper = () => {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
-            <div className="form-group">
+            {/* <div className="form-group mb-3">
               <label htmlFor="idMaintenance">Mantenimiento</label>
               <select
                 className="form-control"
@@ -173,9 +169,9 @@ const PrivateHouseKeeper = () => {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
-            <div className="form-group">
+            {/* <div className="form-group mb-3">
               <label htmlFor="idHousekeeper">Housekeeper</label>
               <select
                 className="form-control"
@@ -190,9 +186,9 @@ const PrivateHouseKeeper = () => {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
-            <div className="form-group">
+            {/* <div className="form-group mb-4">
               <label htmlFor="idCategory">Categoría</label>
               <select
                 className="form-control"
@@ -207,11 +203,11 @@ const PrivateHouseKeeper = () => {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
             <button
               type="button"
-              className="btn btn-primary"
+              className="btn btn-primary btn-block"
               onClick={createMaintenanceTask}  // Llamar la función para crear la tarea de mantenimiento
             >
               Crear Tarea

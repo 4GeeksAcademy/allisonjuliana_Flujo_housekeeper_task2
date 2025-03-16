@@ -205,10 +205,10 @@ class MaintenanceTask(db.Model):
     nombre = db.Column(db.String(120), unique=True, nullable=False)
     photo = db.Column(db.String(255), nullable=True)
     condition = db.Column(db.String(120), nullable=True)
-    room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
-    maintenance_id = db.Column(db.Integer, db.ForeignKey('maintenance.id'), nullable=False)
-    housekeeper_id = db.Column(db.Integer, db.ForeignKey('housekeeper.id'), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=True)  # Cambiar a nullable=True
+    maintenance_id = db.Column(db.Integer, db.ForeignKey('maintenance.id'), nullable=True)  # Cambiar a nullable=True
+    housekeeper_id = db.Column(db.Integer, db.ForeignKey('housekeeper.id'), nullable=True)  # Cambiar a nullable=True
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)  # Cambiar a nullable=True
 
     # Relaciones
     room = db.relationship('Room')
@@ -223,8 +223,6 @@ class MaintenanceTask(db.Model):
         return {
             "id": self.id,
             "nombre": self.nombre,
-            # "branch_id": self.branch_id
-        # }
             "photo": self.photo,
             "condition": self.condition,
             "room": self.room.serialize() if self.room else None,  # Detalles de la habitación
