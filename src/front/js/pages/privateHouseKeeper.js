@@ -137,7 +137,7 @@ const PrivateHouseKeeper = () => {
             {groupedTasks[selectedRoomId] && groupedTasks[selectedRoomId].map((task) => (
               <div key={task.id} className="card mb-3 shadow-sm">
                 <div className="card-body">
-                  <p><strong>Habitación:</strong> {task.room_nombre}</p>
+                  {/* <p><strong>Habitación:</strong> {task.room_nombre}</p> */}
                   <p><strong>Tarea asignada:</strong> {task.nombre}</p>
                   <p><strong>Condición:</strong> {task.condition}</p>
                   <p><strong>Fecha de Asignación:</strong> {task.assignment_date}</p>
