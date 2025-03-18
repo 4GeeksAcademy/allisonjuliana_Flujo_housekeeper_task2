@@ -7,29 +7,62 @@ const PrivateHouseKeeper = () => {
   const [selectedRoomId, setSelectedRoomId] = useState(null); // Estado para almacenar el id de la habitación seleccionada
   const [isRoomSelected, setIsRoomSelected] = useState(false); // Estado para controlar si se seleccionó una habitación
   const [nombre, setNombre] = useState(''); // Estado para el nombre de la tarea de mantenimiento
+  const [housekeeperId, setHousekeeperId] = useState(null); // Estado para almacenar el ID del housekeeper
   const navigate = useNavigate();
   
   const backendUrl = process.env.REACT_APP_BACKEND_URL || process.env.BACKEND_URL;
 
+  // Función para obtener el housekeeper_id desde el token
+  const getHousekeeperIdFromToken = () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);  // Decodificar el token
+        console.log(decoded);  // Verifica el contenido del token decodificado
+        setHousekeeperId(decoded.housekeeper_id); // Guardar el housekeeper_id en el estado
+      } catch (error) {
+        console.error('Error al decodificar el token:', error);
+        alert('Hubo un error al obtener el ID del housekeeper');
+      }
+    } else {
+      navigate('/loginHouseKeeper'); // Redirigir si no hay token
+    }
+  };
+
+  // Llamar la función para obtener el housekeeper_id cuando el componente se monte
+  useEffect(() => {
+    getHousekeeperIdFromToken();
+  }, []);
+
   // Función para obtener las tareas de housekeeper
   const handleFetchTasks = async () => {
+    if (housekeeperId === null) {
+      return; // Si no tenemos el housekeeperId, no obtenemos las tareas
+    }
+
     try {
       const response = await fetch(`${backendUrl}api/housekeeper_tasks`);
       if (!response.ok) {
         throw new Error('Error en la respuesta del servidor');
       }
       const data = await response.json();
-      setTasks(data); // Guardamos las tareas en el estado
+      console.log(data);  // Verifica los datos que recibes del servidor
+
+      // Filtrar las tareas que pertenecen al housekeeper actual usando el campo correcto 'id_housekeeper'
+      const filteredTasks = data.filter(task => task.id_housekeeper === housekeeperId);
+      setTasks(filteredTasks); // Guardamos las tareas filtradas en el estado
     } catch (error) {
       console.error('Error al obtener las tareas:', error);
       alert('Error al obtener las tareas, por favor intente más tarde.');
     }
   };
 
-  // Llamada a la función cuando el componente se monta
+  // Llamar la función cuando el housekeeperId cambia
   useEffect(() => {
-    handleFetchTasks();
-  }, []);
+    if (housekeeperId !== null) {
+      handleFetchTasks();
+    }
+  }, [housekeeperId]); // Esto se ejecutará cuando el housekeeperId cambie
 
   // Función para manejar el clic en la habitación y seleccionar el id
   const handleRoomClick = (roomId) => {
@@ -137,7 +170,6 @@ const PrivateHouseKeeper = () => {
             {groupedTasks[selectedRoomId] && groupedTasks[selectedRoomId].map((task) => (
               <div key={task.id} className="card mb-3 shadow-sm">
                 <div className="card-body">
-                  {/* <p><strong>Habitación:</strong> {task.room_nombre}</p> */}
                   <p><strong>Tarea asignada:</strong> {task.nombre}</p>
                   <p><strong>Condición:</strong> {task.condition}</p>
                   <p><strong>Fecha de Asignación:</strong> {task.assignment_date}</p>
@@ -160,7 +192,6 @@ const PrivateHouseKeeper = () => {
                 <h5 className="card-title text-primary">Tarea de Mantenimiento</h5>
                 <form>
                   <div className="form-group mb-3">
-                    {/* <label htmlFor="nombre">Nombre</label> */}
                     <input
                       type="text"
                       className="form-control"
